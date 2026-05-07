@@ -1,0 +1,14 @@
+.git
+.venv
+.vscode
+.idea
+__pycache__
+*.py[cod]
+.pytest_cache
+.mypy_cache
+htmlcov
+dist
+build
+.env
+.env.*
+!.env.example

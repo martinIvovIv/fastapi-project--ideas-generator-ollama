@@ -33,6 +33,13 @@ Endpoints:
 - `/api/projects/generate-project-ideas?user_topic=YOUR_TOPIC`
 - `/api/projects/generate-project-ideas-with-descriptions?project_idea=YOUR_TOPIC&tone=professional`
 
+Run with Docker:
+
+```bash
+docker build -t fastapi-project-ideas .
+docker run --env-file .env -p 8000:8000 fastapi-project-ideas
+```
+
 # Motivation: to be used as a tool for an AI assistant
 
 
