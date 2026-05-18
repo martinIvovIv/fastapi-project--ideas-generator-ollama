@@ -10,25 +10,30 @@ from ollama import AsyncClient, Client
 
 load_dotenv()
 
-api_key = os.getenv("AI_API_KEY")
+OLLAMA_HOST = "https://ollama.com"
+DEFAULT_API_KEY = os.getenv("AI_API_KEY")
 
-# Use the Ollama async client
-client = AsyncClient(
-    host='https://ollama.com',
-    headers={'Authorization': 'Bearer ' + api_key}
-)
+
+# Create Ollama async client
+def create_client(api_key: str) -> AsyncClient:
+    return AsyncClient(
+        host=OLLAMA_HOST,
+        headers={"Authorization": f"Bearer {api_key}"}
+    )
 
 
 async def generate_with_response_model(
     prompt: str,
-    response_model: Type[BaseModel]
+    response_model: Type[BaseModel],
+    api_key: str
 ) -> BaseModel:
     """
     Generate response with structured output using the configured Ollama LLM.
-    Respond with raw JSON only. Do not wrap it in markdown code fences or add any explanation.
     """
     
     try:
+        client = create_client(api_key)
+
         # Call the model and ask it to return raw JSON
         response = await client.chat(
             model="gemma4:31b-cloud",

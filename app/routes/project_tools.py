@@ -3,7 +3,8 @@ import logging
 import time
 from typing import Annotated
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.security import APIKeyHeader
 from pydantic import ValidationError
 
 # Import our custom modules
@@ -14,6 +15,25 @@ from ..services import prompts as pr
 logger = logging.getLogger("AppLogger")
 
 router = APIRouter()
+api_key_header = APIKeyHeader(
+    name="AI_API_KEY",
+    auto_error=False,
+    description="Ollama API key. If omitted, the app uses AI_API_KEY from .env."
+)
+
+
+def get_ai_api_key(
+    api_key: Annotated[str | None, Depends(api_key_header)]
+) -> str:
+    resolved_api_key = api_key or llm.DEFAULT_API_KEY
+
+    if not resolved_api_key:
+        raise HTTPException(
+            status_code=401,
+            detail="Add AI_API_KEY in Swagger Authorize or set it in your .env file"
+        )
+
+    return resolved_api_key
 
 
 def log_request_attempt(
@@ -35,7 +55,8 @@ def log_request_attempt(
 @router.get("/projects/generate-project-ideas")
 async def generate_project_ideas(
     user_topic: Annotated[str, Query(min_length=1, max_length=140)],
-    request: Request
+    request: Request,
+    api_key: Annotated[str, Depends(get_ai_api_key)]
 ):
     """
     Generate 10 interesting application projects for a given topic.
@@ -61,7 +82,8 @@ async def generate_project_ideas(
             
             result: ProjectIdeas = await llm.generate_with_response_model(
                 prompt=prompt,
-                response_model=ProjectIdeas
+                response_model=ProjectIdeas,
+                api_key=api_key
             )
             
             return {
@@ -102,7 +124,8 @@ async def generate_project_ideas(
 async def generate_project_ideas_with_descriptions(
     project_idea: Annotated[str, Query(min_length=1, max_length=140)],
     tone: Annotated[str, Query(min_length=1, max_length=50)],
-    request: Request
+    request: Request,
+    api_key: Annotated[str, Depends(get_ai_api_key)]
 ):
     """
     Generate 10 project ideas with descriptions.
@@ -127,7 +150,8 @@ async def generate_project_ideas_with_descriptions(
             result: ProjectIdeasWithDescriptions = await llm.generate_with_response_model(
                 prompt=prompt,
                 # temperature=1,
-                response_model=ProjectIdeasWithDescriptions
+                response_model=ProjectIdeasWithDescriptions,
+                api_key=api_key
             )
             
             return {
